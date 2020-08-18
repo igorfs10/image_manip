@@ -1,6 +1,6 @@
 [package]
 name = "image_manip"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["igorfs10 <igorfs10@gmail.com>"]
 edition = "2018"
 license = "gpl-v3"
@@ -8,3 +8,5 @@ license = "gpl-v3"
 [dependencies]
 photon-rs = { git = "https://github.com/silvia-odwyer/photon/" }
 chrono = "^0.4"
+toml = "^0.5.6"
+serde = { version = "^1.0", features = ["derive"] }
