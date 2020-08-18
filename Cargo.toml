@@ -9,4 +9,4 @@ license = "gpl-v3"
 photon-rs = { git = "https://github.com/silvia-odwyer/photon/" }
 chrono = "^0.4"
 toml = "^0.5.6"
-serde = { version = "^1.0", features = ["derive"] }
+serde = "^1.0.115"

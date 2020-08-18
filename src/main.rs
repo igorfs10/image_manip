@@ -98,7 +98,7 @@ fn pause() {
     write!(stdout, "Aperte enter para encerrar...").unwrap();
     stdout.flush().unwrap();
 
-    // Leia um único byte e descarta
+    // Lê um único byte e descarta
     let _ = stdin.read(&mut [0u8]).unwrap();
 }
 
