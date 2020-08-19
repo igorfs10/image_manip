@@ -16,6 +16,9 @@ const PASTA_CONVERSAO: &str = "/convert";            // Nome da pasta que será 
 // Configuração padrão. Quando arquivo de configuração não existe.
 const LARGURA: u32 = 500;
 const ALTURA: u32 = 500;
+const RED_CHANNEL: i16 = 0;
+const GREEN_CHANNEL: i16 = 0;
+const BLUE_CHANNEL: i16 = 0;
 
 fn main() {
     // Carrega os argumentos enviados por linha de comando
@@ -31,7 +34,7 @@ fn main() {
 
     // Verifica se o arquivo existe. Se existir carrega na variável configurações, caso contrário cria um arquivo com a configuração padrão.
     if Path::new(&caminho_configuracao).exists() {
-        println!("Arquivo de configurações encontrado. Carregando configurações.");
+        println!("Arquivo de configurações encontrado. Carregando configurações...");
 
         // Lê o arquivo de configuração em string e converte para o objeto
         let arquivo = read_to_string(caminho_configuracao).unwrap();
@@ -39,45 +42,56 @@ fn main() {
 
         println!("Configurações carregadas.");
     } else {
-        println!("Arquivo de configurações não encontrado. Criando arquivo de configurações novo.");
+        println!("Arquivo de configurações não encontrado. Criando arquivo de configurações novo...");
 
         /* Cria o objeto de configuração padrão, converte o objeto em string,
             cria o arquivo e salva as configurações transformando a string em bytes */
-        configuracoes = Config  { width: LARGURA, height: ALTURA };
+        configuracoes = Config  {
+            width: LARGURA,
+            height: ALTURA,
+            red_channel: RED_CHANNEL,
+            green_channel: GREEN_CHANNEL,
+            blue_channel: BLUE_CHANNEL
+        };
+
         let conteudo = toml::to_string(&configuracoes).unwrap();
         let mut arquivo = File::create(caminho_configuracao).unwrap();
         arquivo.write_all(conteudo.as_bytes()).unwrap();
 
         println!("Arquivo criado.");
     }
+    println!("");
+    println!("");
     // Verifica se a pasta de conversão existe e automaticamente cria, caso não exista
     match create_dir_all(&caminho_conversao){
         Ok(_) => {
             // Percorre a array recebida por parâmetros começando pelo segundo elemento, pois o primeiro é o caminho da própria aplicação
             for i in 1..args.len(){
+                println!("Alterando imagem {}...", &args[i]);
 
                 // Abre a imagem recebida por parâmetro
                 let img = open_image(&args[i]);
         
-                // Increment the red channel by 200
-                // photon_rs::channels::alter_red_channel(&mut img, 200);
-
                 // Retorna uma nova imagem alterada
-                let img_alterada = resize(&img, configuracoes.width, configuracoes.height, SamplingFilter::Lanczos3);
+                let mut img_alterada = resize(&img, configuracoes.width, configuracoes.height, SamplingFilter::Lanczos3);
 
                 // Remove a variável imagem que não será mais usada
                 drop(img);
 
+                // Altera os canais da imagem
+                photon_rs::channels::alter_red_channel(&mut img_alterada, configuracoes.red_channel);
+                photon_rs::channels::alter_green_channel(&mut img_alterada, configuracoes.green_channel);
+                photon_rs::channels::alter_blue_channel(&mut img_alterada, configuracoes.red_channel);
+
                 // Pega a hora para gerar um nome de arquivo único
                 let data: DateTime<Utc> = Utc::now();
 
-                // Write file to filesystem.
-                println!("Alterando imagem {}...", &args[i]);
-                let nome_imagem = format!("{}/{}.jpg", &caminho_conversao, data.timestamp_millis());
-
                 // Salva arquivo
+                let nome_imagem = format!("{}/{}.jpg", &caminho_conversao, data.timestamp_millis());
                 save_image(img_alterada, &nome_imagem);
                 println!("Imagem salva em {}.", nome_imagem);
+                println!("");
+                println!("");
             }
         }
         Err(_) => {
@@ -107,4 +121,7 @@ fn pause() {
 struct Config {
     width: u32,
     height: u32,
+    red_channel: i16,
+    green_channel: i16,
+    blue_channel: i16
 }
