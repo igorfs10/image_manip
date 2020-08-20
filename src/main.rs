@@ -7,7 +7,7 @@ use std::path::Path;
 use chrono::prelude::*;
 use serde::{ Serialize, Deserialize };
 use photon_rs::native::{ open_image, save_image };
-use photon_rs::transform::{ resize, SamplingFilter};
+use photon_rs::transform::{ resize, SamplingFilter };
 
 
 const ARQUIVO_CONFIGURACAO: &str = "/config.toml";   // Nome do arquivo de configurações
@@ -36,32 +36,30 @@ fn main() {
     if Path::new(&caminho_configuracao).exists() {
         println!("Arquivo de configurações encontrado. Carregando configurações...");
 
-        // Lê o arquivo de configuração em string e converte para o objeto
-        let arquivo = read_to_string(caminho_configuracao).unwrap();
-        configuracoes = toml::from_str(&arquivo).unwrap();
-
-        println!("Configurações carregadas.");
+        let arquivo = read_to_string(&caminho_configuracao).expect("Não foi possível ler o arquivo de configuração.");
+        
+        // Tentar ler o arquivo de configuração em string e converte para o objeto em caso de erro interrompe a aplicação
+        match toml::from_str(&arquivo) {
+            Ok(arquivo_convertido) => {
+                configuracoes = arquivo_convertido;
+                println!("Configurações carregadas.");
+            }
+            Err(_) => {
+                println!("Não foi possível carregar o arquivo de configurações, criando um arquivo novo...");
+                configuracoes = criar_configuracoes(&caminho_configuracao);
+            }
+        }
     } else {
         println!("Arquivo de configurações não encontrado. Criando arquivo de configurações novo...");
 
         /* Cria o objeto de configuração padrão, converte o objeto em string,
             cria o arquivo e salva as configurações transformando a string em bytes */
-        configuracoes = Config  {
-            width: LARGURA,
-            height: ALTURA,
-            red_channel: RED_CHANNEL,
-            green_channel: GREEN_CHANNEL,
-            blue_channel: BLUE_CHANNEL
-        };
-
-        let conteudo = toml::to_string(&configuracoes).unwrap();
-        let mut arquivo = File::create(caminho_configuracao).unwrap();
-        arquivo.write_all(conteudo.as_bytes()).unwrap();
-
-        println!("Arquivo criado.");
+        configuracoes = criar_configuracoes(&caminho_configuracao);
     }
+
     println!("");
     println!("");
+
     // Verifica se a pasta de conversão existe e automaticamente cria, caso não exista
     match create_dir_all(&caminho_conversao){
         Ok(_) => {
@@ -74,7 +72,7 @@ fn main() {
         
                 // Retorna uma nova imagem alterada
                 let mut img_alterada = resize(&img, configuracoes.width, configuracoes.height, SamplingFilter::Lanczos3);
-
+                
                 // Remove a variável imagem que não será mais usada
                 drop(img);
 
@@ -114,6 +112,28 @@ fn pause() {
 
     // Lê um único byte e descarta
     let _ = stdin.read(&mut [0u8]).unwrap();
+}
+
+// Função que cria as configurações e carrega as configurações
+fn criar_configuracoes(caminho_configuracao: &str) -> Config {
+    /* Cria o objeto de configuração padrão, converte o objeto em string,
+    cria o arquivo e salva as configurações transformando a string em bytes */
+
+    let configuracoes = Config  {
+        width: LARGURA,
+        height: ALTURA,
+        red_channel: RED_CHANNEL,
+        green_channel: GREEN_CHANNEL,
+        blue_channel: BLUE_CHANNEL
+    };
+    
+    let conteudo = toml::to_string(&configuracoes).unwrap();
+    let mut arquivo = File::create(caminho_configuracao).expect("Não foi possível criar o arquivo de configuração.");
+    arquivo.write_all(conteudo.as_bytes()).expect("Não foi possível salvar o arquivo de configuração.");
+
+    println!("Arquivo de configurações criado.");
+
+    return configuracoes;
 }
 
 // Struct que cria e carrega arquivo de configuração
