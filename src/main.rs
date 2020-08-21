@@ -65,26 +65,26 @@ fn main() {
                 let mut img = open_image(&args[i]);
                 
                 // Retorna uma nova imagem com dimensões alteradas se as medidas definidas forem diferentes de 0
-                if configuracoes.width != 0 && configuracoes.height != 0 {
-                    img = transform::resize(&img, configuracoes.width, configuracoes.height, transform::SamplingFilter::Lanczos3);
+                if configuracoes.largura != 0 && configuracoes.altura != 0 {
+                    img = transform::resize(&img, configuracoes.largura, configuracoes.altura, transform::SamplingFilter::Lanczos3);
                 }
 
                 // Altera os canais da imagem se definidas
-                if configuracoes.red_channel != 0 { channels::alter_red_channel(&mut img, configuracoes.red_channel); }
-                if configuracoes.green_channel != 0 { channels::alter_green_channel(&mut img, configuracoes.green_channel); }
-                if configuracoes.blue_channel != 0 { channels::alter_blue_channel(&mut img, configuracoes.red_channel); }
+                if configuracoes.canal_vermelho != 0 { channels::alter_blue_channel(&mut img, configuracoes.canal_vermelho); }
+                if configuracoes.canal_verde != 0 { channels::alter_green_channel(&mut img, configuracoes.canal_verde); }
+                if configuracoes.canal_azul != 0 { channels::alter_red_channel(&mut img, configuracoes.canal_azul); }
 
                 // Rotaciona a imagem se for setado
-                if configuracoes.horizontal_flip { transform::fliph(&mut img); }
-                if configuracoes.vertical_flip { transform::flipv(&mut img); }
+                if configuracoes.espelhamento_horizontal { transform::fliph(&mut img); }
+                if configuracoes.espelhamento_vertical { transform::flipv(&mut img); }
 
                 // Pega a hora para gerar um nome de arquivo único
                 let data: DateTime<Utc> = Utc::now();
 
                 // Salva arquivo
-                let nome_imagem = format!("{}/{}.jpg", &caminho_conversao, data.timestamp_millis());
+                let nome_imagem = format!("{}/{}i{}.jpg", &caminho_conversao, data.timestamp_millis(), i);
                 save_image(img, &nome_imagem);
-                println!("Imagem salva em {}.\n\n", nome_imagem);
+                println!("Imagem salva em {}.", nome_imagem);
             }
         }
         Err(_) => {
@@ -98,7 +98,7 @@ fn pause() {
     let mut stdin = io::stdin();
     let mut stdout = io::stdout();
 
-    println!("Pronto.");
+    println!("\n\nPronto.");
 
     // Queremos que o cursor fique no final da linha, então imprimimos sem uma linha nova
     write!(stdout, "Aperte enter para encerrar...").unwrap();
@@ -127,26 +127,26 @@ fn criar_configuracoes(caminho_configuracao: &str) -> Config {
 // Struct que cria e carrega arquivo de configuração
 #[derive(Serialize, Deserialize)]
 struct Config {
-    width: u32,
-    height: u32,
-    red_channel: i16,
-    green_channel: i16,
-    blue_channel: i16,
-    horizontal_flip: bool,
-    vertical_flip: bool
+    largura: u32,
+    altura: u32,
+    canal_vermelho: i16,
+    canal_verde: i16,
+    canal_azul: i16,
+    espelhamento_horizontal: bool,
+    espelhamento_vertical: bool
 }
 
 // Implementa um valor padrão para inicializar a struct. Valor padrão de quando não houver configurações
 impl Default for Config {
     fn default() -> Self {
         Config {
-            width: 0,
-            height: 0,
-            red_channel: 0,
-            green_channel: 0,
-            blue_channel: 0,
-            horizontal_flip: false,
-            vertical_flip: false
+            largura: 0,
+            altura: 0,
+            canal_vermelho: 0,
+            canal_verde: 0,
+            canal_azul: 0,
+            espelhamento_horizontal: false,
+            espelhamento_vertical: false
         }
     }
 }
