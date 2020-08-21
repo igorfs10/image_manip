@@ -98,8 +98,7 @@ fn pause() {
     let mut stdin = io::stdin();
     let mut stdout = io::stdout();
 
-
-     println!("Finalizado.");
+    println!("Pronto.");
 
     // Queremos que o cursor fique no final da linha, então imprimimos sem uma linha nova
     write!(stdout, "Aperte enter para encerrar...").unwrap();
