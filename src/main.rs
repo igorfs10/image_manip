@@ -7,18 +7,12 @@ use std::path::Path;
 use chrono::prelude::*;
 use serde::{ Serialize, Deserialize };
 use photon_rs::native::{ open_image, save_image };
-use photon_rs::transform::{ resize, SamplingFilter };
+use photon_rs::transform;
+use photon_rs::channels;
 
 
 const ARQUIVO_CONFIGURACAO: &str = "/config.toml";   // Nome do arquivo de configurações
 const PASTA_CONVERSAO: &str = "/convert";            // Nome da pasta que será criada para colocar as imagens alteradas
-
-// Configuração padrão. Quando arquivo de configuração não existe.
-const LARGURA: u32 = 500;
-const ALTURA: u32 = 500;
-const RED_CHANNEL: i16 = 0;
-const GREEN_CHANNEL: i16 = 0;
-const BLUE_CHANNEL: i16 = 0;
 
 fn main() {
     // Carrega os argumentos enviados por linha de comando
@@ -32,7 +26,8 @@ fn main() {
     // Instancia do objeto de configurações
     let configuracoes: Config;
 
-    // Verifica se o arquivo existe. Se existir carrega na variável configurações, caso contrário cria um arquivo com a configuração padrão.
+    /* Verifica se o arquivo existe. Se existir carrega na variável configurações,
+        caso contrário cria um arquivo com a configuração padrão. */
     if Path::new(&caminho_configuracao).exists() {
         println!("Arquivo de configurações encontrado. Carregando configurações...");
 
@@ -57,8 +52,7 @@ fn main() {
         configuracoes = criar_configuracoes(&caminho_configuracao);
     }
 
-    println!("");
-    println!("");
+    println!("\n");
 
     // Verifica se a pasta de conversão existe e automaticamente cria, caso não exista
     match create_dir_all(&caminho_conversao){
@@ -68,28 +62,29 @@ fn main() {
                 println!("Alterando imagem {}...", &args[i]);
 
                 // Abre a imagem recebida por parâmetro
-                let img = open_image(&args[i]);
-        
-                // Retorna uma nova imagem alterada
-                let mut img_alterada = resize(&img, configuracoes.width, configuracoes.height, SamplingFilter::Lanczos3);
+                let mut img = open_image(&args[i]);
                 
-                // Remove a variável imagem que não será mais usada
-                drop(img);
+                // Retorna uma nova imagem com dimensões alteradas se as medidas definidas forem diferentes de 0
+                if configuracoes.width != 0 && configuracoes.height != 0 {
+                    img = transform::resize(&img, configuracoes.width, configuracoes.height, transform::SamplingFilter::Lanczos3);
+                }
 
-                // Altera os canais da imagem
-                photon_rs::channels::alter_red_channel(&mut img_alterada, configuracoes.red_channel);
-                photon_rs::channels::alter_green_channel(&mut img_alterada, configuracoes.green_channel);
-                photon_rs::channels::alter_blue_channel(&mut img_alterada, configuracoes.red_channel);
+                // Altera os canais da imagem se definidas
+                if configuracoes.red_channel != 0 { channels::alter_red_channel(&mut img, configuracoes.red_channel); }
+                if configuracoes.green_channel != 0 { channels::alter_green_channel(&mut img, configuracoes.green_channel); }
+                if configuracoes.blue_channel != 0 { channels::alter_blue_channel(&mut img, configuracoes.red_channel); }
+
+                // Rotaciona a imagem se for setado
+                if configuracoes.horizontal_flip { transform::fliph(&mut img); }
+                if configuracoes.vertical_flip { transform::flipv(&mut img); }
 
                 // Pega a hora para gerar um nome de arquivo único
                 let data: DateTime<Utc> = Utc::now();
 
                 // Salva arquivo
                 let nome_imagem = format!("{}/{}.jpg", &caminho_conversao, data.timestamp_millis());
-                save_image(img_alterada, &nome_imagem);
-                println!("Imagem salva em {}.", nome_imagem);
-                println!("");
-                println!("");
+                save_image(img, &nome_imagem);
+                println!("Imagem salva em {}.\n\n", nome_imagem);
             }
         }
         Err(_) => {
@@ -116,16 +111,10 @@ fn pause() {
 
 // Função que cria as configurações e carrega as configurações
 fn criar_configuracoes(caminho_configuracao: &str) -> Config {
+    
     /* Cria o objeto de configuração padrão, converte o objeto em string,
     cria o arquivo e salva as configurações transformando a string em bytes */
-
-    let configuracoes = Config  {
-        width: LARGURA,
-        height: ALTURA,
-        red_channel: RED_CHANNEL,
-        green_channel: GREEN_CHANNEL,
-        blue_channel: BLUE_CHANNEL
-    };
+    let configuracoes = Config::default();
     
     let conteudo = toml::to_string(&configuracoes).unwrap();
     let mut arquivo = File::create(caminho_configuracao).expect("Não foi possível criar o arquivo de configuração.");
@@ -143,5 +132,22 @@ struct Config {
     height: u32,
     red_channel: i16,
     green_channel: i16,
-    blue_channel: i16
+    blue_channel: i16,
+    horizontal_flip: bool,
+    vertical_flip: bool
+}
+
+// Implementa um valor padrão para inicializar a struct. Valor padrão de quando não houver configurações
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            width: 0,
+            height: 0,
+            red_channel: 0,
+            green_channel: 0,
+            blue_channel: 0,
+            horizontal_flip: false,
+            vertical_flip: false
+        }
+    }
 }
