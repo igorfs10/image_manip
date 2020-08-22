@@ -4,12 +4,14 @@ use std::io::prelude::*;
 use std::fs::{ File, create_dir_all, read_to_string };
 use std::path::Path;
 
+use rayon::prelude::*;
 use chrono::prelude::*;
 use serde::{ Serialize, Deserialize };
 use photon_rs::native::{ open_image, save_image };
 use photon_rs::transform;
 use photon_rs::channels;
-
+use blake3;
+use colour::*;
 
 const ARQUIVO_CONFIGURACAO: &str = "/config.toml";   // Nome do arquivo de configurações
 const PASTA_CONVERSAO: &str = "/convert";            // Nome da pasta que será criada para colocar as imagens alteradas
@@ -17,6 +19,7 @@ const PASTA_CONVERSAO: &str = "/convert";            // Nome da pasta que será 
 fn main() {
     // Carrega os argumentos enviados por linha de comando
     let args: Vec<String> = env::args().collect();
+    let lista_imagens = args[1..args.len()].to_vec();
 
     // Pega o caminho do executável para criar a configuração e pasta de conversão
     let caminho = Path::new(&args[0]).parent().unwrap().to_str().unwrap();
@@ -29,7 +32,7 @@ fn main() {
     /* Verifica se o arquivo existe. Se existir carrega na variável configurações,
         caso contrário cria um arquivo com a configuração padrão. */
     if Path::new(&caminho_configuracao).exists() {
-        println!("Arquivo de configurações encontrado. Carregando configurações...");
+        yellow_ln!("Arquivo de configurações encontrado. Carregando configurações...");
 
         let arquivo = read_to_string(&caminho_configuracao).expect("Não foi possível ler o arquivo de configuração.");
         
@@ -37,15 +40,15 @@ fn main() {
         match toml::from_str(&arquivo) {
             Ok(arquivo_convertido) => {
                 configuracoes = arquivo_convertido;
-                println!("Configurações carregadas.");
+                green_ln!("Configurações carregadas.");
             }
             Err(_) => {
-                println!("Não foi possível carregar o arquivo de configurações, criando um arquivo novo...");
+                yellow_ln!("Não foi possível carregar o arquivo de configurações, criando um arquivo novo...");
                 configuracoes = criar_configuracoes(&caminho_configuracao);
             }
         }
     } else {
-        println!("Arquivo de configurações não encontrado. Criando arquivo de configurações novo...");
+        yellow_ln!("Arquivo de configurações não encontrado. Criando arquivo de configurações novo...");
 
         /* Cria o objeto de configuração padrão, converte o objeto em string,
             cria o arquivo e salva as configurações transformando a string em bytes */
@@ -57,12 +60,13 @@ fn main() {
     // Verifica se a pasta de conversão existe e automaticamente cria, caso não exista
     match create_dir_all(&caminho_conversao){
         Ok(_) => {
-            // Percorre a array recebida por parâmetros começando pelo segundo elemento, pois o primeiro é o caminho da própria aplicação
-            for i in 1..args.len(){
-                println!("Alterando imagem {}...", &args[i]);
+            // Percorre a array de caminho das imagens
+            lista_imagens.par_iter()
+            .for_each(|caminho_imagem| {
+                yellow_ln!("Alterando imagem {}...", caminho_imagem);
 
                 // Abre a imagem recebida por parâmetro
-                let mut img = open_image(&args[i]);
+                let mut img = open_image(caminho_imagem);
                 
                 // Retorna uma nova imagem com dimensões alteradas se as medidas definidas forem diferentes de 0
                 if configuracoes.largura != 0 && configuracoes.altura != 0 {
@@ -80,15 +84,24 @@ fn main() {
 
                 // Pega a hora para gerar um nome de arquivo único
                 let data: DateTime<Utc> = Utc::now();
+                
+                // Cria uma chave usando a hora atual e o caminho total do arquivo para criar a hash
+                let mut chave = caminho_imagem.as_bytes().to_vec();
+                chave.extend(data.timestamp_millis().to_be_bytes().iter());
 
-                // Salva arquivo
-                let nome_imagem = format!("{}/{}i{}.jpg", &caminho_conversao, data.timestamp_millis(), i);
+                // Gera um hash para nomear o arquivo
+                let hash = blake3::hash(&chave);
+
+                // Gera o caminho do arquivo
+                let nome_imagem = format!("{}/{}.jpg", &caminho_conversao, hash.to_hex());
+
+                // Salvar imagem
                 save_image(img, &nome_imagem);
-                println!("Imagem salva em {}.", nome_imagem);
-            }
+                green_ln!("Imagem {} salva em {}.", caminho_imagem, nome_imagem);
+            });
         }
         Err(_) => {
-            println!("Não foi possível criar a pasta de conversão.");
+            red_ln!("Não foi possível criar a pasta de conversão.");
         }
     }
     pause();
@@ -98,7 +111,7 @@ fn pause() {
     let mut stdin = io::stdin();
     let mut stdout = io::stdout();
 
-    println!("\n\nPronto.");
+    blue_ln!("\n\nFim.");
 
     // Queremos que o cursor fique no final da linha, então imprimimos sem uma linha nova
     write!(stdout, "Aperte enter para encerrar...").unwrap();
@@ -119,7 +132,7 @@ fn criar_configuracoes(caminho_configuracao: &str) -> Config {
     let mut arquivo = File::create(caminho_configuracao).expect("Não foi possível criar o arquivo de configuração.");
     arquivo.write_all(conteudo.as_bytes()).expect("Não foi possível salvar o arquivo de configuração.");
 
-    println!("Arquivo de configurações criado.");
+    green_ln!("Arquivo de configurações criado.");
 
     return configuracoes;
 }

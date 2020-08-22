@@ -1,14 +1,17 @@
 # Changelog
 Lista de alterações do projeto.
 
-Esse formato é baseado no [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+Esse formato é baseado no [Keep a Changelog](https://keepachangelog.com/pt/1.0.0/),
 e esse projeto adere à [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Não lançado]
+## [1.1.1] - 2020-08-22
 ### Adicionado
+- Uso de multithread
+- Adição de cores nos textos de terminal
 
 ### Modificado
 - Arquivo de configuração alterado para português
+- Alterado o nome do arquivo para usar o hash blake3
 
 ## [1.1.0] - 2020-08-20
 ### Adicionado
