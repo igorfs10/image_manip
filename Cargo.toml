@@ -1,6 +1,6 @@
 [package]
 name = "image_manip"
-version = "1.1.1"
+version = "1.2.0"
 authors = ["igorfs10 <igorfs10@gmail.com>"]
 edition = "2018"
 license = "gpl-v3"
@@ -13,3 +13,6 @@ rayon = "^1.4.0"
 blake3 = "^0.3.6"
 colour = "^0.5.0"
 chrono = "^0.4.18"
+
+[profile.release]
+lto = true

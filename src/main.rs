@@ -13,8 +13,8 @@ use photon_rs::channels;
 use blake3;
 use colour::*;
 
-const ARQUIVO_CONFIGURACAO: &str = "/config.toml";   // Nome do arquivo de configurações
-const PASTA_CONVERSAO: &str = "/convert";            // Nome da pasta que será criada para colocar as imagens alteradas
+const ARQUIVO_CONFIGURACAO: &str = "/image_manip_config.toml";   // Nome do arquivo de configurações
+const PASTA_CONVERSAO: &str = "/image_manip_convert";            // Nome da pasta que será criada para colocar as imagens alteradas
 
 fn main() {
     // Carrega os argumentos enviados por linha de comando
@@ -93,7 +93,7 @@ fn main() {
                 let hash = blake3::hash(&chave);
 
                 // Gera o caminho do arquivo
-                let nome_imagem = format!("{}/{}.jpg", &caminho_conversao, hash.to_hex());
+                let nome_imagem = format!("{}/{}.{}", &caminho_conversao, hash.to_hex(), configuracoes.extensao);
 
                 // Salvar imagem
                 save_image(img, &nome_imagem);
@@ -146,7 +146,8 @@ struct Config {
     canal_verde: i16,
     canal_azul: i16,
     espelhamento_horizontal: bool,
-    espelhamento_vertical: bool
+    espelhamento_vertical: bool,
+    extensao: String
 }
 
 // Implementa um valor padrão para inicializar a struct. Valor padrão de quando não houver configurações
@@ -159,7 +160,8 @@ impl Default for Config {
             canal_verde: 0,
             canal_azul: 0,
             espelhamento_horizontal: false,
-            espelhamento_vertical: false
+            espelhamento_vertical: false,
+            extensao: "jpg".to_string()
         }
     }
 }
