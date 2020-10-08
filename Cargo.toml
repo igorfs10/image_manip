@@ -9,10 +9,13 @@ license = "gpl-v3"
 photon-rs = { git = "https://github.com/silvia-odwyer/photon/" }
 toml = "^0.5.6"
 serde = "^1.0.116"
-rayon = "^1.4.0"
-blake3 = "^0.3.6"
+rayon = "^1.4.1"
+blake3 = "^0.3.7"
 colour = "^0.5.0"
-chrono = "^0.4.18"
+chrono = "^0.4.19"
 
 [profile.release]
 lto = true
+
+[profile.release.build-override]
+opt-level = 3
