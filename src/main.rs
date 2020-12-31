@@ -150,13 +150,11 @@ fn main() {
 
 fn pause() {
     let mut stdin = io::stdin();
-    let mut stdout = io::stdout();
 
     println!("{}", style("\n\nFim.").blue());
 
     // Queremos que o cursor fique no final da linha, então imprimimos sem uma linha nova
-    write!(stdout, "Aperte enter para encerrar...").unwrap();
-    stdout.flush().unwrap();
+    println!("{}", style("Aperte enter para encerrar...").blue());
 
     // Lê um único byte e descarta
     let _ = stdin.read(&mut [0u8]).unwrap();

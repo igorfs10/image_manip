@@ -4,6 +4,11 @@ Lista de alterações do projeto.
 Esse formato é baseado no [Keep a Changelog](https://keepachangelog.com/pt/1.0.0/),
 e esse projeto adere à [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Não lançado]
+### Modificado
+- Mudança de cor de texo de fim
+- Especicação de versão exata das libs usadas
+
 ## [1.2.1] - 2020-12-31
 ### Modificado
 - Atualização da lib rayon, chrono e blake3
