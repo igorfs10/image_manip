@@ -4,10 +4,11 @@ Lista de alterações do projeto.
 Esse formato é baseado no [Keep a Changelog](https://keepachangelog.com/pt/1.0.0/),
 e esse projeto adere à [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Não lançado]
+## [1.2.1] - 2020-12-31
 ### Modificado
 - Atualização da lib rayon, chrono e blake3
 - Aplicação de otimização opt-level3 para dependências
+- Usa a lib console no lugar da colour para corrigir falhas do console
 
 ## [1.2.0] - 2020-09-27
 ### Adicionado
