@@ -4,10 +4,13 @@ Lista de alterações do projeto.
 Esse formato é baseado no [Keep a Changelog](https://keepachangelog.com/pt/1.0.0/),
 e esse projeto adere à [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Não lançado]
+## [1.2.2] - 2021-01-01
 ### Modificado
 - Mudança de cor de texo de fim
 - Especicação de versão exata das libs usadas
+
+## Correção
+- Pegar o diretório do executável corretamente quando executado pela linha de comando
 
 ## [1.2.1] - 2020-12-31
 ### Modificado

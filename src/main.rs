@@ -21,7 +21,8 @@ fn main() {
     let lista_imagens = args[1..args.len()].to_vec();
 
     // Pega o caminho do executável para criar a configuração e pasta de conversão
-    let caminho = Path::new(&args[0]).parent().unwrap().to_str().unwrap();
+    let caminho_executavel_full = env::current_exe().unwrap();
+    let caminho = caminho_executavel_full.parent().unwrap().to_str().unwrap();
     let caminho_configuracao = format!("{}{}", caminho, ARQUIVO_CONFIGURACAO);
     let caminho_conversao = format!("{}{}", caminho, PASTA_CONVERSAO);
 
@@ -37,13 +38,13 @@ fn main() {
         );
 
         let arquivo = read_to_string(&caminho_configuracao)
-            .expect("Não foi possível ler o arquivo de configuração.");
+            .expect("Não foi possível ler o arquivo de configuração");
 
         // Tentar ler o arquivo de configuração em string e converte para o objeto em caso de erro interrompe a aplicação
         match toml::from_str(&arquivo) {
             Ok(arquivo_convertido) => {
                 configuracoes = arquivo_convertido;
-                println!("{}", style("Configurações carregadas.").green());
+                println!("{}", style("Configurações carregadas").green());
             }
             Err(_) => {
                 println!("{}", style("Não foi possível carregar o arquivo de configurações, criando um arquivo novo...").yellow());
@@ -77,7 +78,7 @@ fn main() {
                 );
 
                 // Abre a imagem recebida por parâmetro
-                let mut img = open_image(caminho_imagem).expect("Arquivo inválido.");
+                let mut img = open_image(caminho_imagem).expect("Arquivo inválido");
 
                 // Retorna uma nova imagem com dimensões alteradas se as medidas definidas forem diferentes de 0
                 if configuracoes.largura != 0 && configuracoes.altura != 0 {
@@ -131,7 +132,7 @@ fn main() {
                 println!(
                     "{}",
                     style(format!(
-                        "Imagem {} salva em {}.",
+                        "Imagem {} salva em {}",
                         caminho_imagem, nome_imagem
                     ))
                     .green()
@@ -141,7 +142,7 @@ fn main() {
         Err(_) => {
             println!(
                 "{}",
-                style("Não foi possível criar a pasta de conversão.").red()
+                style("Não foi possível criar a pasta de conversão").red()
             );
         }
     }
@@ -151,7 +152,7 @@ fn main() {
 fn pause() {
     let mut stdin = io::stdin();
 
-    println!("{}", style("\n\nFim.").blue());
+    println!("{}", style("\n\nFim").blue());
 
     // Queremos que o cursor fique no final da linha, então imprimimos sem uma linha nova
     println!("{}", style("Aperte enter para encerrar...").blue());
@@ -168,12 +169,12 @@ fn criar_configuracoes(caminho_configuracao: &str) -> Config {
 
     let conteudo = toml::to_string(&configuracoes).unwrap();
     let mut arquivo = File::create(caminho_configuracao)
-        .expect("Não foi possível criar o arquivo de configuração.");
+        .expect("Não foi possível criar o arquivo de configuração");
     arquivo
         .write_all(conteudo.as_bytes())
-        .expect("Não foi possível salvar o arquivo de configuração.");
+        .expect("Não foi possível salvar o arquivo de configuração");
 
-    println!("{}", style("Arquivo de configurações criado.").green());
+    println!("{}", style("Arquivo de configurações criado").green());
 
     configuracoes
 }
