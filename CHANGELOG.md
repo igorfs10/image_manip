@@ -4,6 +4,13 @@ Lista de alterações do projeto.
 Esse formato é baseado no [Keep a Changelog](https://keepachangelog.com/pt/1.0.0/),
 e esse projeto adere à [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased]
+### Adicionado
+- Adiconado arquivo de configuração na compilação do arquivo
+
+### Modificado
+- Atualização do Serde
+
 ## [1.2.2] - 2021-01-01
 ### Modificado
 - Mudança de cor de texo de fim
