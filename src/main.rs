@@ -3,19 +3,20 @@ use std::fs::{create_dir_all, read_to_string, File};
 use std::io;
 use std::io::prelude::*;
 use std::path::Path;
+use std::time::Instant;
 
 use chrono::prelude::*;
 use console::style;
-use photon_rs::channels;
-use photon_rs::native::{open_image, save_image};
-use photon_rs::transform;
+use image::imageops;
+use imageops::FilterType;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 
-const ARQUIVO_CONFIGURACAO: &str = "/image_manip_config.toml"; // Nome do arquivo de configurações
+const ARQUIVO_CONFIGURACAO: &str = "/image_manip_config.json"; // Nome do arquivo de configurações
 const PASTA_CONVERSAO: &str = "/image_manip_convert"; // Nome da pasta que será criada para colocar as imagens alteradas
 
 fn main() {
+    let start = Instant::now();
     // Carrega os argumentos enviados por linha de comando
     let args: Vec<String> = env::args().collect();
     let lista_imagens = args[1..args.len()].to_vec();
@@ -41,7 +42,7 @@ fn main() {
             .expect("Não foi possível ler o arquivo de configuração");
 
         // Tentar ler o arquivo de configuração em string e converte para o objeto em caso de erro interrompe a aplicação
-        match toml::from_str(&arquivo) {
+        match serde_json::from_str(&arquivo) {
             Ok(arquivo_convertido) => {
                 configuracoes = arquivo_convertido;
                 println!("{}", style("Configurações carregadas").green());
@@ -78,35 +79,32 @@ fn main() {
                 );
 
                 // Abre a imagem recebida por parâmetro
-                let mut img = open_image(caminho_imagem).expect("Arquivo inválido");
+                let mut img =
+                    image::open(caminho_imagem).expect("Não foi possível abrir o arquivo");
 
                 // Retorna uma nova imagem com dimensões alteradas se as medidas definidas forem diferentes de 0
                 if configuracoes.largura != 0 && configuracoes.altura != 0 {
-                    img = transform::resize(
-                        &img,
-                        configuracoes.largura,
-                        configuracoes.altura,
-                        transform::SamplingFilter::Lanczos3,
-                    );
-                }
-
-                // Altera os canais da imagem se definidas
-                if configuracoes.canal_vermelho != 0 {
-                    channels::alter_blue_channel(&mut img, configuracoes.canal_vermelho);
-                }
-                if configuracoes.canal_verde != 0 {
-                    channels::alter_green_channel(&mut img, configuracoes.canal_verde);
-                }
-                if configuracoes.canal_azul != 0 {
-                    channels::alter_red_channel(&mut img, configuracoes.canal_azul);
+                    if configuracoes.manter_proporcao {
+                        img = img.resize(
+                            configuracoes.largura,
+                            configuracoes.altura,
+                            FilterType::Lanczos3,
+                        );
+                    } else {
+                        img = img.resize_exact(
+                            configuracoes.largura,
+                            configuracoes.altura,
+                            FilterType::Lanczos3,
+                        );
+                    }
                 }
 
                 // Rotaciona a imagem se for setado
                 if configuracoes.espelhamento_horizontal {
-                    transform::fliph(&mut img);
+                    img = img.fliph();
                 }
                 if configuracoes.espelhamento_vertical {
-                    transform::flipv(&mut img);
+                    img = img.flipv();
                 }
 
                 // Pega a hora para gerar um nome de arquivo único
@@ -128,7 +126,8 @@ fn main() {
                 );
 
                 // Salvar imagem
-                save_image(img, &nome_imagem);
+                img.save(&nome_imagem)
+                    .expect("Não foi possível salvar a images");
                 println!(
                     "{}",
                     style(format!(
@@ -146,6 +145,8 @@ fn main() {
             );
         }
     }
+    let duration = start.elapsed();
+    println!("Operação terminada em: {:?}", duration);
     pause();
 }
 
@@ -167,7 +168,7 @@ fn criar_configuracoes(caminho_configuracao: &str) -> Config {
     cria o arquivo e salva as configurações transformando a string em bytes */
     let configuracoes = Config::default();
 
-    let conteudo = toml::to_string(&configuracoes).unwrap();
+    let conteudo = serde_json::to_string(&configuracoes).unwrap();
     let mut arquivo = File::create(caminho_configuracao)
         .expect("Não foi possível criar o arquivo de configuração");
     arquivo
@@ -184,9 +185,7 @@ fn criar_configuracoes(caminho_configuracao: &str) -> Config {
 struct Config {
     largura: u32,
     altura: u32,
-    canal_vermelho: i16,
-    canal_verde: i16,
-    canal_azul: i16,
+    manter_proporcao: bool,
     espelhamento_horizontal: bool,
     espelhamento_vertical: bool,
     extensao: String,
@@ -198,9 +197,7 @@ impl Default for Config {
         Config {
             largura: 0,
             altura: 0,
-            canal_vermelho: 0,
-            canal_verde: 0,
-            canal_azul: 0,
+            manter_proporcao: false,
             espelhamento_horizontal: false,
             espelhamento_vertical: false,
             extensao: "jpg".to_string(),

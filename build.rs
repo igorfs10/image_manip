@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::{env, fs};
 
-const SETTINGS_FILE: &str = "image_manip_config.toml";
+const SETTINGS_FILE: &str = "image_manip_config.json";
 fn main() {
     let target_dir_path = env::var("OUT_DIR").unwrap();
     copy(&target_dir_path, SETTINGS_FILE);
