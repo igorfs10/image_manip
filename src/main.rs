@@ -1,3 +1,7 @@
+//#![windows_subsystem = "windows"]
+
+mod ui;
+
 use std::env;
 use std::fs::{create_dir_all, read_to_string, File};
 use std::io;
@@ -7,15 +11,40 @@ use std::time::Instant;
 
 use chrono::prelude::*;
 use console::style;
+use fltk::enums::Shortcut;
+use fltk::menu::MenuFlag;
+use fltk::prelude::MenuExt;
 use image::imageops;
 use imageops::FilterType;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use fltk::app;
+
 const ARQUIVO_CONFIGURACAO: &str = "/image_manip_config.json"; // Nome do arquivo de configurações
 const PASTA_CONVERSAO: &str = "/image_manip_convert"; // Nome da pasta que será criada para colocar as imagens alteradas
 
+const GUI: bool = true;
+
 fn main() {
+    if GUI {
+        gui();
+    } else {
+        console();
+    }
+}
+
+fn gui() {
+    let app = app::App::default();
+    let mut ui = ui::ImageManip::make_window();
+    ui.menu_bar
+        .add("File/Exit", Shortcut::None, MenuFlag::Normal, |_| {
+            std::process::exit(0);
+        });
+    app.run().unwrap();
+}
+
+fn console() {
     let start = Instant::now();
     // Carrega os argumentos enviados por linha de comando
     let args: Vec<String> = env::args().collect();

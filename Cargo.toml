@@ -8,13 +8,18 @@ license = "gpl-v3"
 [dependencies]
 image = "0.23.14"
 serde = { version = "1.0.126", features = ["derive"] }
-serde_json = "1.0.64"
+serde_json = "1.0.66"
 rayon = "1.5.1"
-blake3 = "0.3.8"
+blake3 = "1.0.0"
 console = "0.14.1"
 chrono = "0.4.19"
+fltk = { version = "1.1.4", features = ["fltk-bundled"] }
+
+[build-dependencies]
+fl2rust = "0.4.4"
 
 [profile.release]
 lto = true
 opt-level = 3
+incremental = true
 codegen-units = 1
