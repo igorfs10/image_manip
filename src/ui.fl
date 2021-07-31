@@ -8,10 +8,20 @@ class ImageManip {open
   } {
     Fl_Window {} {
       label {Image Manip} open
-      xywh {724 153 339 346} type Double hide
+      xywh {724 153 339 346} type Double visible
     } {
-      Fl_Menu_Bar menu_bar {selected
+      Fl_Menu_Bar menu_bar {open
         xywh {0 0 339 20}
+      } {
+        Submenu sub_menu_file {
+          label File open
+          xywh {0 0 62 20}
+        } {
+          MenuItem menu_item_exit {
+            label Exit selected
+            xywh {0 0 30 20}
+          }
+        }
       }
       Fl_Browser browser_files {
         label {Files:}

@@ -11,8 +11,6 @@ use std::time::Instant;
 
 use chrono::prelude::*;
 use console::style;
-use fltk::enums::Shortcut;
-use fltk::menu::MenuFlag;
 use fltk::prelude::MenuExt;
 use image::imageops;
 use imageops::FilterType;
@@ -36,11 +34,11 @@ fn main() {
 
 fn gui() {
     let app = app::App::default();
-    let mut ui = ui::ImageManip::make_window();
-    ui.menu_bar
-        .add("File/Exit", Shortcut::None, MenuFlag::Normal, |_| {
-            std::process::exit(0);
-        });
+    let ui = ui::ImageManip::make_window();
+    let mut menu_item_exit = ui.menu_bar.find_item("File/Exit").unwrap();
+    menu_item_exit.set_callback(|_| {
+        std::process::exit(0);
+    });
     app.run().unwrap();
 }
 
