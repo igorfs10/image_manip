@@ -1,6 +1,7 @@
 //#![windows_subsystem = "windows"]
 
 mod ui;
+mod config;
 
 use std::env;
 use std::fs::{create_dir_all, read_to_string, File};
@@ -11,13 +12,13 @@ use std::time::Instant;
 
 use chrono::prelude::*;
 use console::style;
-use fltk::prelude::MenuExt;
+use fltk::prelude::{BrowserExt, MenuExt};
 use image::imageops;
 use imageops::FilterType;
 use rayon::prelude::*;
-use serde::{Deserialize, Serialize};
-
 use fltk::app;
+
+use config::Config;
 
 const ARQUIVO_CONFIGURACAO: &str = "/image_manip_config.json"; // Nome do arquivo de configurações
 const PASTA_CONVERSAO: &str = "/image_manip_convert"; // Nome da pasta que será criada para colocar as imagens alteradas
@@ -35,10 +36,21 @@ fn main() {
 fn gui() {
     let app = app::App::default();
     let ui = ui::ImageManip::make_window();
+
     let mut menu_item_exit = ui.menu_bar.find_item("File/Exit").unwrap();
     menu_item_exit.set_callback(|_| {
         std::process::exit(0);
     });
+
+    let mut browser_files = ui.browser_files;
+
+    let mut args: Vec<String> = env::args().collect();
+    args.remove(0);
+    
+    for paths in args {
+        browser_files.add(&paths);
+    }
+
     app.run().unwrap();
 }
 
@@ -205,29 +217,4 @@ fn criar_configuracoes(caminho_configuracao: &str) -> Config {
     println!("{}", style("Arquivo de configurações criado").green());
 
     configuracoes
-}
-
-// Struct que cria e carrega arquivo de configuração
-#[derive(Serialize, Deserialize)]
-struct Config {
-    largura: u32,
-    altura: u32,
-    manter_proporcao: bool,
-    espelhamento_horizontal: bool,
-    espelhamento_vertical: bool,
-    extensao: String,
-}
-
-// Implementa um valor padrão para inicializar a struct. Valor padrão de quando não houver configurações
-impl Default for Config {
-    fn default() -> Self {
-        Config {
-            largura: 0,
-            altura: 0,
-            manter_proporcao: false,
-            espelhamento_horizontal: false,
-            espelhamento_vertical: false,
-            extensao: "jpg".to_string(),
-        }
-    }
 }
