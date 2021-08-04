@@ -3,6 +3,7 @@
 mod ui;
 mod config;
 
+use std::collections::VecDeque;
 use std::env;
 use std::fs::{create_dir_all, read_to_string, File};
 use std::io;
@@ -44,8 +45,9 @@ fn gui() {
 
     let mut browser_files = ui.browser_files;
 
-    let mut args: Vec<String> = env::args().collect();
-    args.remove(0);
+    let mut args: VecDeque<String> = env::args().collect();
+    
+    args.pop_front();
     
     for paths in args {
         browser_files.add(&paths);
@@ -61,8 +63,7 @@ fn console() {
     let lista_imagens = args[1..args.len()].to_vec();
 
     // Pega o caminho do executável para criar a configuração e pasta de conversão
-    let caminho_executavel_full = env::current_exe().unwrap();
-    let caminho = caminho_executavel_full.parent().unwrap().to_str().unwrap();
+    let caminho = get_exe_location();
     let caminho_configuracao = format!("{}{}", caminho, ARQUIVO_CONFIGURACAO);
     let caminho_conversao = format!("{}{}", caminho, PASTA_CONVERSAO);
 
@@ -217,4 +218,9 @@ fn criar_configuracoes(caminho_configuracao: &str) -> Config {
     println!("{}", style("Arquivo de configurações criado").green());
 
     configuracoes
+}
+
+fn get_exe_location() -> String {
+    let exe_path = env::current_exe().unwrap();
+    exe_path.parent().unwrap().to_str().unwrap().to_string()
 }
