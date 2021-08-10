@@ -1,7 +1,7 @@
 //#![windows_subsystem = "windows"]
 
-mod ui;
 mod config;
+mod ui;
 
 use std::collections::VecDeque;
 use std::env;
@@ -13,11 +13,12 @@ use std::time::Instant;
 
 use chrono::prelude::*;
 use console::style;
-use fltk::prelude::{BrowserExt, MenuExt};
+use fltk::app;
+use fltk::prelude::{BrowserExt, MenuExt, WidgetExt};
+use fltk_theme::{ThemeType, WidgetTheme};
 use image::imageops;
 use imageops::FilterType;
 use rayon::prelude::*;
-use fltk::app;
 
 use config::Config;
 
@@ -36,6 +37,9 @@ fn main() {
 
 fn gui() {
     let app = app::App::default();
+    let widget_theme = WidgetTheme::new(ThemeType::Metro);
+    widget_theme.apply();
+
     let ui = ui::ImageManip::make_window();
 
     let mut menu_item_exit = ui.menu_bar.find_item("File/Exit").unwrap();
@@ -44,14 +48,23 @@ fn gui() {
     });
 
     let mut browser_files = ui.browser_files;
+    let mut button = ui.button_convert;
+
+    let browser_files_btn = browser_files.clone();
 
     let mut args: VecDeque<String> = env::args().collect();
-    
+
     args.pop_front();
-    
+
     for paths in args {
         browser_files.add(&paths);
     }
+
+    button.set_callback(move |_| {
+        for i in 1..=browser_files_btn.size() {
+            println!("{}", browser_files_btn.text(i).unwrap());
+        }
+    });
 
     app.run().unwrap();
 }
