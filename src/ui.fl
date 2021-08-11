@@ -7,7 +7,7 @@ class ImageManip {open
   Function {make_window()} {open
   } {
     Fl_Window {} {
-      label {Image Manip} open selected
+      label {Image Manip} open
       xywh {724 153 339 346} type Double visible
     } {
       Fl_Menu_Bar menu_bar {open
@@ -34,6 +34,14 @@ class ImageManip {open
       Fl_Button button_convert {
         label Convert
         xywh {270 315 64 20}
+      }
+      Fl_Button button_add {
+        label {Add Files}
+        xywh {5 315 64 20}
+      }
+      Fl_Button button_clear {
+        label Clear selected
+        xywh {80 315 64 20}
       }
     }
   }
