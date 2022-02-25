@@ -28,7 +28,7 @@ const IMAGE_EXTENSION_FILTER: &str = "*.{jpg,jpeg,png,bmp,gif}";
 const CONFIG_FILE: &str = "/image_manip_config.json"; // Nome do arquivo de configurações
 const CONVERSION_FOLDER: &str = "/image_manip_convert"; // Nome da pasta que será criada para colocar as imagens alteradas
 
-const GUI: bool = true;
+const GUI: bool = false;
 
 fn main() {
     if GUI {
@@ -303,11 +303,11 @@ fn get_config_file(config_path: &str) -> Config {
                 configuration = config;
             }
             Err(_) => {
-                configuration = create_config_file(&config_path);
+                configuration = create_config_file(config_path);
             }
         }
     } else {
-        configuration = create_config_file(&config_path);
+        configuration = create_config_file(config_path);
     }
     configuration
 }
