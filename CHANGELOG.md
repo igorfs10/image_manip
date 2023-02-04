@@ -11,7 +11,7 @@ e esse projeto adere à [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Modificado
 - Atualização do Serde
 - Uso de Json
-- Atualização das bibliotecas blake3, serde_json
+- Atualização de bibliotecas
 - usa a biblioteca image ao invés da photon
 
 ## [1.2.2] - 2021-01-01

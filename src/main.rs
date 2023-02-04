@@ -1,9 +1,7 @@
 //#![windows_subsystem = "windows"]
 
 mod config;
-mod ui;
 
-use std::collections::VecDeque;
 use std::env;
 use std::fs::{create_dir_all, read_to_string, File};
 use std::io;
@@ -13,82 +11,17 @@ use std::time::Instant;
 
 use chrono::prelude::*;
 use console::style;
-use fltk::prelude::{BrowserExt, MenuExt, WidgetExt};
-use fltk::{app, dialog};
-use fltk_theme::{ThemeType, WidgetTheme};
 use image::imageops;
 use imageops::FilterType;
 use rayon::prelude::*;
 
 use config::Config;
 
-const IMAGE_EXTENSIONS: [&str; 5] = ["jpg", "jpeg", "png", "bmp", "gif"];
-const IMAGE_EXTENSION_FILTER: &str = "*.{jpg,jpeg,png,bmp,gif}";
-
 const CONFIG_FILE: &str = "/image_manip_config.json"; // Nome do arquivo de configurações
 const CONVERSION_FOLDER: &str = "/image_manip_convert"; // Nome da pasta que será criada para colocar as imagens alteradas
 
-const GUI: bool = false;
-
 fn main() {
-    if GUI {
-        gui();
-    } else {
-        console();
-    }
-}
-
-fn gui() {
-    let app = app::App::default();
-    let mut ui = ui::ImageManip::make_window();
-    let mut menu_item_exit = ui.menu_bar.find_item("File/Exit").unwrap();
-    let mut args: VecDeque<String> = env::args().collect();
-    let exe_folder = get_exe_location();
-    let config_file_path = format!("{}{}", exe_folder, CONFIG_FILE);
-    let conversion_folder_path = format!("{}{}", exe_folder, CONVERSION_FOLDER);
-    let configuration = get_config_file(&config_file_path);
-    println!("{} {}", configuration.largura, conversion_folder_path);
-
-    WidgetTheme::new(ThemeType::Metro).apply();
-
-    menu_item_exit.set_callback(|_| {
-        std::process::exit(0);
-    });
-
-    args.pop_front();
-
-    for arg in args {
-        if is_image_extension(&arg) {
-            ui.browser_files.add(&arg);
-        }
-    }
-
-    let browser_files = ui.browser_files.clone();
-    ui.button_convert.set_callback(move |_| {
-        for i in 1..=browser_files.size() {
-            println!("{}", browser_files.text(i).unwrap());
-        }
-    });
-
-    let mut browser_files = ui.browser_files.clone();
-    ui.button_clear.set_callback(move |_| {
-        browser_files.clear();
-    });
-
-    let mut browser_files = ui.browser_files.clone();
-    ui.button_add.set_callback(move |_| {
-        let files = open_file_dialog();
-        'outer: for file in files {
-            for i in 1..=browser_files.size() {
-                if browser_files.text(i).unwrap() == file {
-                    continue 'outer;
-                }
-            }
-            browser_files.add(&file);
-        }
-    });
-
-    app.run().unwrap();
+    console();
 }
 
 fn console() {
@@ -99,8 +32,8 @@ fn console() {
 
     // Pega o caminho do executável para criar a configuração e pasta de conversão
     let caminho = get_exe_location();
-    let caminho_configuracao = format!("{}{}", caminho, CONFIG_FILE);
-    let caminho_conversao = format!("{}{}", caminho, CONVERSION_FOLDER);
+    let caminho_configuracao = format!("{caminho}{CONFIG_FILE}");
+    let caminho_conversao = format!("{caminho}{CONVERSION_FOLDER}");
 
     // Instancia do objeto de configurações
     let configuracoes: Config;
@@ -150,7 +83,7 @@ fn console() {
             lista_imagens.par_iter().for_each(|caminho_imagem| {
                 println!(
                     "{}",
-                    style(format!("Alterando imagem {}...", caminho_imagem)).yellow()
+                    style(format!("Alterando imagem {caminho_imagem}...")).yellow()
                 );
 
                 // Abre a imagem recebida por parâmetro
@@ -205,11 +138,7 @@ fn console() {
                     .expect("Não foi possível salvar a images");
                 println!(
                     "{}",
-                    style(format!(
-                        "Imagem {} salva em {}",
-                        caminho_imagem, nome_imagem
-                    ))
-                    .green()
+                    style(format!("Imagem {caminho_imagem} salva em {nome_imagem}")).green()
                 );
             });
         }
@@ -221,7 +150,7 @@ fn console() {
         }
     }
     let duration = start.elapsed();
-    println!("Operação terminada em: {:?}", duration);
+    println!("Operação terminada em: {duration:?}");
     pause();
 }
 
@@ -258,56 +187,4 @@ fn criar_configuracoes(caminho_configuracao: &str) -> Config {
 fn get_exe_location() -> String {
     let exe_path = env::current_exe().unwrap();
     exe_path.parent().unwrap().to_str().unwrap().to_string()
-}
-
-fn is_image_extension(path_string: &str) -> bool {
-    let path = Path::new(path_string);
-    if let Some(extension) = path.extension() {
-        let extension = extension.to_ascii_lowercase();
-        IMAGE_EXTENSIONS.contains(&extension.to_str().unwrap())
-    } else {
-        false
-    }
-}
-
-fn open_file_dialog() -> Vec<String> {
-    let mut file = fltk::dialog::FileDialog::new(dialog::FileDialogType::BrowseMultiFile);
-    file.set_filter(IMAGE_EXTENSION_FILTER);
-    file.show();
-    let mut paths = Vec::new();
-    for path in file.filenames() {
-        if is_image_extension(path.to_str().unwrap()) {
-            paths.push(path.to_str().unwrap().to_string())
-        }
-    }
-    paths
-}
-
-fn create_config_file(config_path: &str) -> Config {
-    let configuration = Config::default();
-
-    let content = serde_json::to_string(&configuration).unwrap();
-    let mut file = File::create(config_path).unwrap();
-    file.write_all(content.as_bytes()).unwrap();
-
-    configuration
-}
-
-fn get_config_file(config_path: &str) -> Config {
-    let configuration: Config;
-    if Path::new(config_path).exists() {
-        let file = read_to_string(&config_path).unwrap();
-
-        match serde_json::from_str(&file) {
-            Ok(config) => {
-                configuration = config;
-            }
-            Err(_) => {
-                configuration = create_config_file(config_path);
-            }
-        }
-    } else {
-        configuration = create_config_file(config_path);
-    }
-    configuration
 }
